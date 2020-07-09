@@ -1,0 +1,5 @@
+*.jpg
+*.xml
+*.png
+/__pycache__/
+*.iml
