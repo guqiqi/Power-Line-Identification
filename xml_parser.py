@@ -1,47 +1,42 @@
-#coding=utf-8
-
-#通过minidom解析xml文件
-import xml.dom.minidom as xmldom
 import os
-''' 
-XML文件读取 
-<?xml version="1.0" encoding="utf-8"?>
-<catalog>
-    <maxid>4</maxid>
-    <login username="pytest" passwd='123456'>dasdas
-        <caption>Python</caption>
-        <item id="4">
-            <caption>测试</caption>
-        </item>
-    </login>
-    <item id="2">
-        <caption>Zope</caption>
-    </item>
-</catalog>
+import xml.etree.ElementTree as ET
 
-'''
 
-xmlfilepath = os.path.abspath("dataset-training/10kV九洋线东林支线4-1号杆.MOV_023925.732.xml.xml")
-print ("xml文件路径：", xmlfilepath)
+def xml_tree_by_dir(dirname):
+    file_names = []
+    for file in os.listdir(dirname):
+        if os.path.splitext(file)[1] == '.xml':
+            file_names.append(file)
 
-# 得到文档对象
-domobj = xmldom.parse(xmlfilepath)
-print("xmldom.parse:", type(domobj))
-# 得到元素对象
-elementobj = domobj.documentElement
-print ("domobj.documentElement:", type(elementobj))
+    xml_trees = []
+    for file in file_names:
+        xml_trees.append(ET.parse(dirname + '/' + file))
+    return xml_trees
 
-#获得子标签
-subElementObj = elementobj.getElementsByTagName("object")
-print ("getElementsByTagName:", type(subElementObj))
 
-print (len(subElementObj))
-# 获得标签属性值
-print (subElementObj[0].getAttribute("name"))
-print (subElementObj[0].getAttribute("bndbox"))
+def get_tags(tree):
+    root = tree.getroot()
+    tags = []
 
-#区分相同标签名的标签
-subElementObj1 = elementobj.getElementsByTagName("caption")
-for i in range(len(subElementObj1)):
-    print ("subElementObj1[i]:", type(subElementObj1[i]))
-    print (subElementObj1[i].firstChild.data)  #显示标签对之间的数据
+    for i in range(6, len(root)):
+        obj = root[i]
+        name = obj[0].text
+        box = obj[4]
+        x1 = box[0].text
+        y1 = box[1].text
+        x2 = box[2].text
+        y2 = box[3].text
+
+        tag = 0
+        if name == 'DNG plants':
+            tag = 1
+
+        tags.append({'tag': tag, 'x1': x1, 'y1': y1, 'x2': x2, 'y2': y2})
+
+    return tags
+
+
+xml_trees = xml_tree_by_dir('dataset-training')
+for tree in xml_trees:
+    tags = get_tags(tree)
+    print(tags[0]['x1'])
