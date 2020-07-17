@@ -1,5 +1,6 @@
 import cv2
 
+import enhanced_edge_detector
 import image_line_detector
 import line_detector_lib
 
@@ -15,7 +16,7 @@ def batch_edge_detector(imgs, t, T):
             cv2.imwrite("p1/" + img_names[i], edge)
 
             max_remove = 20
-            edge = image_line_detector.edge_detector(img, t, T, 10)
+            edge = enhanced_edge_detector.edge_detector(img, t, T, 10)
             # cv2.imwrite("processed_" + str(max_remove) + "_" + str(t) + "_" + str(T) + "/" + img_names[i], edge)
             cv2.imwrite("p2/1" + img_names[i], edge)
 
