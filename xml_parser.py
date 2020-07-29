@@ -6,12 +6,14 @@ def xml_tree_by_dir(dirname):
     file_names = []
     for file in os.listdir(dirname):
         if os.path.splitext(file)[1] == '.xml':
-            file_names.append(file)
+            file_names.append(os.path.splitext(os.path.splitext(file)[0])[0])
 
+    print(file_names)
     xml_trees = []
     for file in file_names:
-        xml_trees.append(ET.parse(dirname + '/' + file))
-    return xml_trees
+        xml_trees.append(ET.parse(dirname + '/' + file + '.xml.xml'))
+
+    return xml_trees, file_names
 
 
 def get_tags(tree):
@@ -35,8 +37,7 @@ def get_tags(tree):
 
     return tags
 
-
-xml_trees = xml_tree_by_dir('dataset-training')
-for tree in xml_trees:
-    tags = get_tags(tree)
-    print(tags[0]['x1'])
+# xml_trees = xml_tree_by_dir('dataset-training')
+# for tree in xml_trees:
+#     tags = get_tags(tree)
+#     print(tags[0]['x1'])
