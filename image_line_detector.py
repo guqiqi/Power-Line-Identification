@@ -205,7 +205,7 @@ def find_line_in_image(img, edge, lines):
                         if is_exist:
                             if not start:
                                 start = True
-                                start_points.append((int(x), int(m)))
+                                start_points.append((int(x), int(min(y1, y))))
                             else:
                                 blank_pixel = 0
                         else:
@@ -215,7 +215,7 @@ def find_line_in_image(img, edge, lines):
                                 if blank_pixel > max_blank_pixel:
                                     # mark as end point
                                     start = False
-                                    end_points.append((int(x), int(m)))
+                                    end_points.append((int(x), int(min(y1, y))))
                     x = x + 1
                     y = y1
 
@@ -232,7 +232,7 @@ def find_line_in_image(img, edge, lines):
     # print(end_points)
     print(img.shape)
     for i in range(len(start_points)):
-        cv2.line(img, start_points[i], end_points[i], (255, 0, 0), 4)
+        cv2.line(img, start_points[i], end_points[i], (255, 0, 0), 2)
         # cv2.line(new_img, start_points[i], end_points[i], 255, 2)
     return img, new_img
 
@@ -245,89 +245,19 @@ def fixed_line_detector(edges, min_pixel):
     print(lines1)
 
     # 合并直线，对于两条直线差rho<10，theta<10^-2认为同一条直线，取平均值
-    # line_size = lines1.__len__()
-    # index = 0
-    # while index < line_size:
-    #     compare_index = index + 1
-    #     while compare_index < line_size:
-    #         if abs(lines1[index][0] - lines1[compare_index][0]) < 9 and abs(
-    #                 lines1[index][1] - lines1[compare_index][1]) < 0.1:
-    #             lines1[index] = [(lines1[index][0] + lines1[compare_index][0]) / 2,
-    #                              (lines1[index][1] + lines1[compare_index][1]) / 2]
-    #             lines1 = np.concatenate((lines1[0:compare_index], lines1[compare_index + 1:]), axis=0)
-    #             line_size = line_size - 1
-    #         else:
-    #             compare_index = compare_index + 1
-    #     index = index + 1
-    # print(lines1)
-
-    # remove unrelated line
-    # 去掉明显和其他线不在一个方向的
-    # time_count = []
-    # theta = []
-    #
-    # for i in range(lines1.__len__()):
-    #     flag = False
-    #     index = 0
-    #
-    #     for j in range(len(theta)):
-    #         if abs(theta[j] - lines1[i][1]) < np.pi / 20:
-    #             flag = True
-    #             index = j
-    #             break
-    #
-    #     if flag:
-    #         time_count[index] = time_count[index] + 1
-    #     else:
-    #         time_count.append(1)
-    #         theta.append(lines1[i][1])
-    #
-    # for i in range(len(theta)):
-    #     if time_count[i] == 1:
-    #         for j in range(lines1.__len__()):
-    #             if lines1[j][1] == theta[i]:
-    #                 lines1 = np.concatenate((lines1[0:j], lines1[j + 1:]), axis=0)
-    #                 break
-
-    return lines1
-
-
-def line_detector(edges, min_pixel=100):
-    print(edges.shape)
-    # min_pixel = 100
-    step = 100
-
-    lines = cv2.HoughLines(edges, 1, np.pi / 180, min_pixel)
-
-    while (lines is None) or (lines.size > 15) or (lines.size < 3) and min_pixel < 1000:
-        print(min_pixel)
-        if lines is None:
-            if min_pixel > 0:
-                step = int(step / 2)
-            min_pixel = min_pixel - step
-        elif lines.size > 10:
-            min_pixel = min_pixel + step
-        elif lines.size < 3:
-            min_pixel = min_pixel + 10
-
-        lines = cv2.HoughLines(edges, 1, np.pi / 180, min_pixel)
-
-    lines1 = lines[:, 0, :]  # 提取为为二维
-
-    # 合并直线，对于两条直线差rho<10，theta<10^-2认为同一条直线，取平均值
     line_size = lines1.__len__()
     index = 0
     while index < line_size:
         compare_index = index + 1
         while compare_index < line_size:
-            if abs(lines1[index][0] - lines1[compare_index][0]) < 10 and abs(
-                    lines1[index][1] - lines1[compare_index][1]) < 1e-4:
+            if abs(lines1[index][0] - lines1[compare_index][0]) < 9 and abs(
+                    lines1[index][1] - lines1[compare_index][1]) < 0.1:
                 lines1[index] = [(lines1[index][0] + lines1[compare_index][0]) / 2,
                                  (lines1[index][1] + lines1[compare_index][1]) / 2]
                 lines1 = np.concatenate((lines1[0:compare_index], lines1[compare_index + 1:]), axis=0)
                 line_size = line_size - 1
-                pass
-            compare_index = compare_index + 1
+            else:
+                compare_index = compare_index + 1
         index = index + 1
     print(lines1)
 
@@ -358,6 +288,76 @@ def line_detector(edges, min_pixel=100):
                 if lines1[j][1] == theta[i]:
                     lines1 = np.concatenate((lines1[0:j], lines1[j + 1:]), axis=0)
                     break
+
+    return lines1
+
+
+def line_detector(edges, min_pixel=100):
+    print(edges.shape)
+    # min_pixel = 100
+    step = 100
+
+    lines = cv2.HoughLines(edges, 1, np.pi / 180, min_pixel)
+
+    while (lines is None) or (lines.size > 15) or (lines.size < 3) and min_pixel < 1000:
+        print(min_pixel)
+        if lines is None:
+            if min_pixel > 0:
+                step = int(step / 2)
+            min_pixel = min_pixel - step
+        elif lines.size > 10:
+            min_pixel = min_pixel + step
+        elif lines.size < 3:
+            min_pixel = min_pixel + 10
+
+        lines = cv2.HoughLines(edges, 1, np.pi / 180, min_pixel)
+
+    lines1 = lines[:, 0, :]  # 提取为为二维
+
+    # 合并直线，对于两条直线差rho<10，theta<10^-2认为同一条直线，取平均值
+    # line_size = lines1.__len__()
+    # index = 0
+    # while index < line_size:
+    #     compare_index = index + 1
+    #     while compare_index < line_size:
+    #         if abs(lines1[index][0] - lines1[compare_index][0]) < 10 and abs(
+    #                 lines1[index][1] - lines1[compare_index][1]) < 1e-4:
+    #             lines1[index] = [(lines1[index][0] + lines1[compare_index][0]) / 2,
+    #                              (lines1[index][1] + lines1[compare_index][1]) / 2]
+    #             lines1 = np.concatenate((lines1[0:compare_index], lines1[compare_index + 1:]), axis=0)
+    #             line_size = line_size - 1
+    #             pass
+    #         compare_index = compare_index + 1
+    #     index = index + 1
+    # print(lines1)
+
+    # remove unrelated line
+    # 去掉明显和其他线不在一个方向的
+    # time_count = []
+    # theta = []
+    #
+    # for i in range(lines1.__len__()):
+    #     flag = False
+    #     index = 0
+    #
+    #     for j in range(len(theta)):
+    #         if abs(theta[j] - lines1[i][1]) < np.pi / 20:
+    #             flag = True
+    #             index = j
+    #             break
+    #
+    #     if flag:
+    #         time_count[index] = time_count[index] + 1
+    #     else:
+    #         time_count.append(1)
+    #         theta.append(lines1[i][1])
+    #
+    # for i in range(len(theta)):
+    #     if time_count[i] == 1:
+    #         for j in range(lines1.__len__()):
+    #             if lines1[j][1] == theta[i]:
+    #                 lines1 = np.concatenate((lines1[0:j], lines1[j + 1:]), axis=0)
+    #                 break
 
     return lines1
 

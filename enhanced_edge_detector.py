@@ -20,6 +20,28 @@ import numpy as np
 import cv2
 
 
+def color_filter(img):
+    # lower = np.array([40, 100, 40])
+    # upper = np.array([255, 255, 255])
+    # binary = cv2.inRange(img, lower, upper)
+    #
+    # img_new = cv2.bitwise_and(img, img, mask=binary)
+    # return img_new
+
+    lower = np.array([50, 120, 50])
+    upper = np.array([255, 255, 255])
+    binary = cv2.inRange(img, lower, upper)
+
+    mask_inv = cv2.bitwise_and(img, img, mask=binary)
+
+    blank = np.zeros(mask_inv.shape, mask_inv.dtype)
+    # dst = alpha * img + beta * blank
+    alpha = 1.5
+    beta = -180
+    dst = cv2.addWeighted(mask_inv, alpha, blank, 1 - alpha, beta)
+    return dst
+
+
 def gs_filter(img, sigma):
     """ Step 1: Gaussian filter
 
@@ -286,7 +308,10 @@ def tracking(img, weak=80, strong=255):
     return img
 
 
-def edge_detector(img, t, T, max_remove):
+def edge_detector(img, img_name, t, T, max_remove):
+    img = color_filter(img)
+    # cv2.imwrite('color_filter/' + img_name, img)
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     # cv2.imwrite('gray.jpg', gray)
 
